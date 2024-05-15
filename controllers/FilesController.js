@@ -1,10 +1,10 @@
 import Queue from 'bull';
 import { v4 as uuidv4 } from 'uuid';
-import dbClient from '../utils/db';
-import redisClient from '../utils/redis';
 import { ObjectID } from 'mongodb';
 import { promises as fs } from 'fs';
 import mime from 'mime-types';
+import redisClient from '../utils/redis';
+import dbClient from '../utils/db';
 
 const fileQueue = new Queue('fileQueue', 'redis://127.0.0.1:6379');
 
@@ -17,13 +17,15 @@ class FilesController {
     const users = dbClient.db.collection('users');
     const idObject = new ObjectID(userId);
     const user = await users.findOne({ _id: idObject });
-    return user ? user : null;
+    return user || null;
   }
 
   static async postUpload(req, res) {
     const user = await FilesController.getUser(req);
     if (!user) return res.status(401).json({ error: 'Unauthorized' });
-    const { data, name, type, parentId } = req.body;
+    const {
+      data, name, type, parentId,
+    } = req.body;
     const isPublic = req.body.isPublic || false;
     if (!name || !type) {
       return res.status(400).json({ error: `Missing ${name ? 'type' : 'name'}` });
@@ -40,9 +42,11 @@ class FilesController {
       }
     }
     if (type === 'folder') {
-      const newFileSave = { userId: user._id, name, type, parentId: parentId || 0, isPublic };
+      const newFileSave = {
+        userId: user._id, name, type, parentId: parentId || 0, isPublic,
+      };
       files.insertOne(newFileSave)
-	.then((result) => res.status(201).json({ id: result.insertedId, ...newFileSave }))
+        .then((result) => res.status(201).json({ id: result.insertedId, ...newFileSave }))
         .catch((error) => console.log(error));
     } else {
       const filePath = process.env.FOLDER_PATH || '/tmp/files_manager';
@@ -62,7 +66,7 @@ class FilesController {
         userId: user._id, name, type, isPublic, parentId: parentId || 0, localPath: fileName,
       };
       files.insertOne(storeFile).then((result) => {
-	const { localPath, ...rest } = storeFile;
+        const { localPath, ...rest } = storeFile;
         res.status(201).json({ id: result.insertedId, ...rest });
         if (type === 'image') {
           fileQueue.add({ userId: user._id, fileId: result.insertedId });
@@ -72,7 +76,7 @@ class FilesController {
     return null;
   }
 
- static async getShow(req, res) {
+  static async getShow(req, res) {
     const user = await FilesController.getUser(req);
     if (!user) return res.status(401).json({ error: 'Unauthorized' });
     const fileId = req.params.id;

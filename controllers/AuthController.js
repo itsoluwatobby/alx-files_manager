@@ -1,11 +1,11 @@
-import dbClient from '../utils/db';
 import { v4 as uuidv4 } from 'uuid';
-import redisClient from '../utils/redis';
 import sha1 from 'sha1';
+import dbClient from '../utils/db';
+import redisClient from '../utils/redis';
 
 class AuthController {
   static getConnect(req, res) {
-    const authData = req.headers['authorization'];
+    const authData = req.headers.authorization;
     let userEmail = authData.split(' ')[1];
     const buff = Buffer.from(userEmail, 'base64');
     userEmail = buff.toString('ascii');
@@ -19,9 +19,9 @@ class AuthController {
         const token = uuidv4();
         const key = `auth_${token}`;
         await redisClient.set(key, user._id.toString(), 60 * 60 * 24);
-        res.status(200).json({ token });
+        return res.status(200).json({ token });
       } else {
-        res.status(401).json({ error: 'Unauthorized' });
+        return res.status(401).json({ error: 'Unauthorized' });
       }
     });
   }
@@ -32,9 +32,9 @@ class AuthController {
     const id = await redisClient.get(key);
     if (id) {
       await redisClient.del(key);
-      res.status(204).json({});
+      return res.status(204).json({});
     } else {
-      res.status(401).json({ error: 'Unauthorized' });
+      return res.status(401).json({ error: 'Unauthorized' });
     }
   }
 }
