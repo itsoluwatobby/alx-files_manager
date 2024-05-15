@@ -20,9 +20,8 @@ class AuthController {
         const key = `auth_${token}`;
         await redisClient.set(key, user._id.toString(), 60 * 60 * 24);
         return res.status(200).json({ token });
-      } else {
-        return res.status(401).json({ error: 'Unauthorized' });
       }
+      return res.status(401).json({ error: 'Unauthorized' });
     });
   }
 
@@ -33,9 +32,8 @@ class AuthController {
     if (id) {
       await redisClient.del(key);
       return res.status(204).json({});
-    } else {
-      return res.status(401).json({ error: 'Unauthorized' });
     }
+    return res.status(401).json({ error: 'Unauthorized' });
   }
 }
 

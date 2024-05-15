@@ -21,10 +21,9 @@ class UsersController {
       if (data) return res.status(400).json({ error: 'Already exist' });
       userModel.insertOne({ email, password: encryptPass })
         .then((newUser) => {
-          res.status(200).json({ id: newUser.insertedId, email });
-          userQueue.add({ userId: result.insertedId });
-          return;
-        }).catch((error) => return res.sendStatus(500));
+          userQueue.add({ userId: newUser.insertedId });
+          return res.status(200).json({ id: newUser.insertedId, email });
+        }).catch(() => res.sendStatus(500));
     });
   }
 
@@ -38,7 +37,7 @@ class UsersController {
       users.findOne({ _id: idObject }, (err, user) => {
         if (user) {
           return res.status(200).json({ id: userId, email: user.email });
-        } 
+        }
         return res.status(401).json({ error: 'Unauthorized' });
       });
     } else {
