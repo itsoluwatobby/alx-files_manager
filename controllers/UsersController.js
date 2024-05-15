@@ -1,4 +1,5 @@
 /* eslint-disable class-methods-use-this */
+/* eslint-disable consistent-return */
 import Queue from 'bull';
 import sha1 from 'sha1';
 import { ObjectID } from 'mongodb';
